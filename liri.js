@@ -1,12 +1,6 @@
 // read and set any environment variables with the dotenv package
 require("dotenv").config();
 
-// setting variable for command user inputs
-var command = process.argv[2]
-
-// setting variable for movie title or song title user inputs
-var inputText = process.argv.slice(3).join(" ")
-
 // asking node to read keys.js file
 var keys = require("./keys.js");
 
@@ -18,6 +12,12 @@ var Spotify = require('node-spotify-api');
 
 // calling the request npm package to use with OMDB
 var request = require('request');
+
+// setting variable for command user inputs
+var command = process.argv[2]
+
+// setting variable for movie title or song title user inputs
+var inputText = process.argv.slice(3).join(" ")
 
 // setting the twitter keys using keys.js file
 var clientTwitter = new Twitter({
@@ -46,24 +46,41 @@ case "spotify-this-song":
 case "movie-this":
   movieRun();
   break;
+
+default:
+  noCommand();
+  break;
 }
 
 // If the "my-tweets" function is called...
-function tweets() {
+function tweetsRun() {
 
-  //   // twitter response to get 20 most recent tweets from user (me)
-    clientTwitter.get('favorites/list', function(error, tweets, response) {
-      if(error) throw error;
-      console.log(tweets);  // The favorites.
-      //console.log("Tweet: " + JSON.parse(response).created_at);
-      });
+  var queryItems = {user_name: "robynjs", count: 20};
+
+    clientTwitter.get('statuses/user_timeline', queryItems, function(error, tweets, response) {
+
+      if (error) {
+        return console.log('Error occurred: ' + error);
+      }
+
+      else {
+        var data = [];
+        for (var i = 0; i < tweets.length; i++) {
+          data.push({
+              "Tweet: "  : tweets[i].text,
+              "Created At: "  : tweets[i].created_at,
+          });
+        }
+        console.log(data);
+      }
+    });
 }
 
 // If the "spotify-this-song" function is called...
 function songRun() {
 
   // spotify call that returns song info
-  clientSpotify.search({ type: 'track', query: 'All the Small Things' }, function(err, data) {
+  clientSpotify.search({ type: 'track', query: inputText, limit: 1 }, function(err, data) {
       if (err) {
         return console.log('Error occurred: ' + err);
       }
@@ -120,7 +137,6 @@ function movieRun() {
   }
 }
 
-
-if (command != "my-tweets" || "spotify-this-song" || "movie-this") {
+function noCommand() {
   console.log("That is not a recognized command. Please try again!")
 }
